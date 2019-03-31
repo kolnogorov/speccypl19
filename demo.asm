@@ -54,20 +54,6 @@ stars_generate_layer
 	ld (hl),#ff: inc hl: ld (hl),#ff
 	ret
 
-; starfiend - render a frame
-; in:	hl - stars coords tab
-; stars_render
-; 	push hl
-; 	ld (stars_render_sp+1),sp, sp,hl, ix, stars_render_loop, ly, stars_count
-; 	di
-; stars_render_loop
-; 	pop hl: dec hl, ly: jp nz,dot_put_ix
-; stars_render_sp
-; 	ld sp,0
-; 	ei
-; 	pop hl
-; 	ret
-
 ; in:	hl - stars coords tab
 ; 	c - speed in pixels
 stars_render
@@ -78,16 +64,6 @@ stars_render_loop
 	inc hl
 	push hl: call dot_put: pop hl
 	djnz stars_render_loop
-	ret
-
-; in:	hl - stars coords tab
-;	c - speed in pixels
-stars_move
-	ld b,stars_count
-1b	inc hl
-	ld a,c: add a,(hl): ld (hl),a
-	inc hl
-	djnz 1b
 	ret
 
 ; ----- init
