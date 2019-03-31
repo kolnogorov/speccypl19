@@ -26,9 +26,23 @@ dot_2x2
 	dec h
 	; call dot_put
 dot_1x1
+
+; in: hl - x,y
+;     a - method (or/xor/and)
 ; HL = x,y
 dot_put
+	ex de,hl
+	; ld (dot_put_method),a
 	ld e,h, h,high dot_tab, d,(high dot_tab)+2
 	ld a,(de): inc d: or (hl): inc h: ld h,(hl), l,a, a,(de)
-dot_put_method	or (hl)
+dot_put_method
+	xor (hl)
 	ld (hl),a: ret
+
+dot_put_ix
+	; ld (dot_put_method),a
+	ld e,h, h,high dot_tab, d,(high dot_tab)+2
+	ld a,(de): inc d: or (hl): inc h: ld h,(hl), l,a, a,(de)
+dot_put_ix_method
+	xor (hl)
+	ld (hl),a: jp (ix)

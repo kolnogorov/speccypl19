@@ -1,38 +1,93 @@
 	device zxspectrum128
 
 start		equ #6000
-screen_address	equ #4000
+screen_address	equ #c000
 
-dot_tab		equ #8000	; [#0200]
-stars_tab	equ #8200	; [#0100]
+dot_tab		equ #8000		; [#0400]
+stars_layer_1	equ dot_tab+#400	; [#0200]
+stars_layer_2	equ stars_layer_1+#400	; [#0200]
+stars_layer_3	equ stars_layer_2+#400	; [#0200]
+
+im_tab		equ #be00		;[#0200]
 
 color		equ #47
-stars_count	equ 10
+stars_count	equ 100
 
 	org start
 
 	call init
 
-	ld a,128
+	ld a,100
 	call stars_init
+	ei
+	di
+loop
+	; halt
+	call scr_swap
+	call cls_pix
+	ld hl,stars_layer_1, c,1: call stars_render
+	ld hl,stars_layer_2, c,2: call stars_render
+	ld hl,stars_layer_3, c,3: call stars_render
 
-
-
+	jp loop
 
 
 	jr $
 
-
-	display rnd3
+; starfield - initial setup, generation coords
+; in:	a - stars count
+; out:	stars coordinates in stars_tab
 stars_init
-	push af
-	ld a,#ff: call rnd_x: ld h,a
-	ld a,#bf: call rnd_x: ld l,a
-	push hl: call rnd3: pop hl
-	and a: call z,dot_1x1
-	cp 1: call z,dot_2x2
-	cp 2: call z,dot_3x3
-	pop af: dec a: jr nz,stars_init
+	call im2_init
+	ld hl,stars_layer_1: call stars_generate_layer
+	ld hl,stars_layer_2: call stars_generate_layer
+	ld hl,stars_layer_3: call stars_generate_layer
+	ret
+
+stars_generate_layer
+1	push af,hl
+	ld a,#ff: call rnd_x: ld d,a	; random X coord
+	ld a,#bf: call rnd_x: ld e,a	; random Y coord
+	pop hl
+	ld (hl),e: inc hl: ld (hl),d: inc hl
+	pop af: dec a: jr nz,1b
+	ld (hl),#ff: inc hl: ld (hl),#ff
+	ret
+
+; starfiend - render a frame
+; in:	hl - stars coords tab
+; stars_render
+; 	push hl
+; 	ld (stars_render_sp+1),sp, sp,hl, ix, stars_render_loop, ly, stars_count
+; 	di
+; stars_render_loop
+; 	pop hl: dec hl, ly: jp nz,dot_put_ix
+; stars_render_sp
+; 	ld sp,0
+; 	ei
+; 	pop hl
+; 	ret
+
+; in:	hl - stars coords tab
+; 	c - speed in pixels
+stars_render
+	ld b,stars_count
+stars_render_loop
+	ld e,(hl): inc hl: ld d,(hl)
+	ld a,c: add a,(hl): ld (hl),a
+	inc hl
+	push hl: call dot_put: pop hl
+	djnz stars_render_loop
+	ret
+
+; in:	hl - stars coords tab
+;	c - speed in pixels
+stars_move
+	ld b,stars_count
+1b	inc hl
+	ld a,c: add a,(hl): ld (hl),a
+	inc hl
+	djnz 1b
 	ret
 
 ; ----- init
@@ -45,6 +100,8 @@ init
 
 	ld hl,#4000, bc,#1800, de,hl: inc de: ld (hl),l: ldir
 	ld bc,#2ff, (hl),color: ldir
+	ld a,#17: call set_bnk
+	ld hl,#4000, de,#c000, bc,#1b00: ldir
 
 
 	call dot_init
