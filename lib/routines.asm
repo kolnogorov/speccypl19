@@ -47,8 +47,8 @@ immer
 	exa:exx:push af,bc,de,hl
 
 	ld a,(bank+1): push af
-; 	ld hl,scr,a,#16:add a,(hl):call set_bnk
-; play	call #c005
+	and 8: add a,#16: call set_bnk
+play	call #c005
 	pop af: ld (bank+1),a
 	; ld hl,scr:add a,(hl)
 	ld bc,#7ffd:out (c),a
@@ -59,14 +59,18 @@ immer
 im2_stack ld sp,0:ei
 im2_ret	jp 0
 
-count	dw 0
+count	equ #5b00
+; count	dw 0
 
 ; bank and screen change
-scr_swap
-	ld a,#1d:xor 10:ld (scr_swap+1),a
-set_bnk	ld (bank+1),a
-bank	ld a,0
-	push bc:ld bc,#7ffd:out(c),a:pop bc:ret
+
+set_bnk_save	ld (bank_save+1),a, a,(bank+1): and 8
+bank_save	add a,0: jp set_bank
+scr_swap	ld a,#1d:xor 10:ld (scr_swap+1),a
+set_bnk		ld (bank+1),a
+set_bnk_restore
+bank		ld a,0
+set_bank	push bc:ld bc,#7ffd:out(c),a:pop bc:ret
 
 ; crunch
 ; in:	hl-откуда, de-куда
