@@ -1,0 +1,2 @@
+..\..\..\sjasmplus demo.zx
+pause

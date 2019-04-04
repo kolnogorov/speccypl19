@@ -1,0 +1,393 @@
+//MACHINED - sundown07 demo tbk+4d
+//eff10 - credits
+//psndcj: 08.09.07
+
+
+	DEVICE ZXSPECTRUM128
+	SLOT 3
+			
+/////////////////////////////////////////////////kernal
+		include ..\_files\kernal.zx
+	
+        DW #0051
+        
+        dw Demo
+        dw PLAYER,59200	//592*2
+        dw Demo+3
+        
+                
+        DW JEXIT
+	
+
+        org Demo
+//////////////////////////////////////////////////переменные эффекта
+Ch_scr  EQU #8000;[#1800]// чанковый буфер
+C2p_acd EQU #9800;[#00A0]// код построени€ атрибутов
+C2p_pcd EQU #9900;[#00C0]// код генерации построени€ пикселов
+Out_cd  EQU #9a00;[#0500]// код построени€ пикселов
+
+Rot_plc EQU #a000//
+; раскранченна€ процедура вращалки
+
+
+Color   EQU #4E// цвет экрана
+Screen  EQU #C000// адрес экрана
+
+Ch_win  EQU Screen// sa
+Ch_x    EQU 32
+Ch_y    EQU 24// размеры окна (в чанках)
+
+
+ub_txt	equ #10	//банка с текстурой
+
+
+Scrcnst EQU #C000
+Ch_xsiz EQU 32;
+Ch_ysiz EQU 24;
+; разрешение по оси Y и X (дл€ чанков)
+
+
+//////////////////////////////////////////////////эффект        
+	jp install
+	
+	ld hl,0,(USER),hl:ret	
+
+logo_cur	dw logo_fdm
+	
+logo_fdm	incbin "4d_logo_off.dt"
+logo_tbk	incbin "tbk_logo_off.dt"
+	
+
+effect	call start
+
+		.3      CALL Rot_clc
+		ld a,ub_txt:call BANK
+		call rotate
+	
+		ei:halt
+		call SWAPSCR,HDNSCR		
+		CALL C2prend
+		CALL C2p_out
+		
+		ld de,Screen+#1920:call logo_out
+		
+		ret				
+
+start	
+	ld a,Call_n,(effect),hl
+	ld hl,changer,(USER),hl
+	ret		
+	
+changer
+	ld bc,0:inc bc:ld (changer+1),bc
+	ld hl,fix_tb:call Fix_chk
+	ret
+	
+fix_tb	//таблица фикса
+	dw 50:dw letter
+	dw 75:dw letter
+	dw 100:dw letter
+	dw 125:dw letter
+	dw 150:dw letter
+	dw 175:dw letter
+	dw 200:dw letter
+	dw 225:dw letter
+	dw 250:dw letter
+	dw 275:dw letter
+	dw #ffff
+
+letter	//включаем букву
+	ld hl,(logo_cur),de,hl
+	inc hl
+letter1
+	ld c,(hl):inc hl:ld b,(hl):inc hl
+	push de:ex hl,de
+	add hl,bc
+	ld a,(hl):and a:jr nz,letter2
+	ld (hl),1:pop de:ret
+letter2
+	ex hl,de:pop de
+	jp letter1
+	
+
+logo_out	//вывод логи
+	ld hl,(logo_cur),a,(hl),lx,a:inc hl
+logo0
+	ld c,(hl):inc hl:ld b,(hl):inc hl
+	push hl
+	ld hl,(logo_cur):add hl,bc
+	ld a,(hl):and a:jr z,logo5//hidden
+	inc hl
+logo1	ld a,(hl):cp #ff:jr z,logo5	//end letter
+	add e:ld c,a,b,d:jr nc,$+3:inc b
+	inc hl
+	ld a,(hl),(bc),a:inc hl
+	ld a,b:rla:rla:rla:and #18:or #c0:ld b,a
+		ld a,(hl),(bc),a:inc hl
+		dup 7
+		inc b:ld a,(hl),(bc),a:inc hl
+		edup
+	jp logo1
+logo5
+	pop hl
+	dec lx:jp nz,logo0
+	ret
+	
+	
+
+	
+	
+rotate	//вращалка
+	LD B,high Ch_scr
+Rot_22  LD DE,0:EXX
+Rot_12  LD DE,0,LY,Ch_ysiz
+Rot_11  LD HL,0:INC DE,DE:EXX
+Rot_21  LD HL,0:DEC DE,DE
+	LD C,0:CALL Rot_plc
+	INC B:EXX
+;
+	PUSH DE:LD BC,8:ADD IX,BC
+	LD DE,(Rot_22+1),HL,(Rot_11+1)
+	ADD HL,DE:LD (Rot_11+1),HL
+	LD DE,(Rot_12+1),HL,(Rot_21+1)
+	AND A:SBC HL,DE:LD (Rot_21+1),HL
+	POP DE:DEC LY:JR NZ,Rot_11
+	ret
+
+	
+	
+
+Rot_clc ;рассчет параметров
+	LD HL,Rot_s3:CALL Mat,R_sub80
+	PUSH HL
+	LD HL,Rot_s1:CALL Mat,R_sub80
+	POP BC:ADD HL,BC:LD (Rot_12+1),HL
+;
+	LD HL,Rot_s2:CALL Mat,R_sub80
+	LD (Rot_22+1),HL
+;
+	LD HL,Rot_s4:CALL Mat
+	LD (Rot_11+1),HL
+;
+	LD HL,Rot_s5:CALL Mat
+	LD (Rot_21+1),HL
+;
+	RET
+
+	DW 0
+Rot_s1  DW #1080,#0000,#0020,#0000
+Rot_s2  DW #1000,#0000,#0030,#0000
+Rot_s3  DW #3380,#0000,#0007,#0000
+Rot_s4  DW #5080,#0000,#0002,#0000
+Rot_s5  DW #4080,#0000,#0002,#0000
+ 
+
+Mat
+	ld (mat_e+1),sp,sp,hl
+	pop bc,hl,de:push de
+	bit 7,b:jr z,mat1
+	ld a,e:cpl:ld e,a
+	ld a,d:cpl:ld d,a:inc de
+mat1	add hl,de:push hl
+	add hl,bc:push hl:ld a,h
+mat_e	ld sp,0:ret
+
+
+
+R_sub80
+	ld l,h,h,0,bc,-#80:add hl,bc:ret
+
+
+		
+	
+////////////////////////////////////////////процедуры
+	 	
+
+C2prend ;генераци€ кода выкидки
+	LD (C2prenE+1),SP
+	LD SP,Out_cd+(Ch_y*Ch_x/2)*3+8*2-1
+	LD H,high Pix_tb
+	LD BC,Ch_scr
+	LD IY,C2pren2
+C2pren1 LD HX,8,LX,C:JP C2p_pcd
+C2pren2
+	LD IX,-8:ADD IX,SP:LD SP,IX
+	LD A,B:CP high Ch_scr+Ch_y:JP NZ,C2pren1
+
+C2prenE LD SP,0:RET
+
+
+C2p_out ;сама выкидка
+	LD (C2poutE+1),SP
+;вывод пикселов
+	LD SP,#D200
+	LD A,#00,BC,#4455,DE,#7577
+	LD IY,C2pout1:JP Out_cd
+C2pout1 LD SP,#D400
+	LD A,#00,BC,#1011,DE,#55DD
+	LD IY,C2pout2:JP Out_cd
+C2pout2 LD SP,#D600
+	LD A,#00,BC,#4454,DE,#5577
+	LD IY,C2pout3:JP Out_cd
+C2pout3 LD SP,#D800
+	LD A,#00,BC,#0111,DE,#55D5
+	LD IY,C2pout0:JP Out_cd
+C2pout0 ;вывод атрибутов
+	LD SP,#DB00
+	LD H,high Atr_tb
+	LD BC,Ch_scr+(Ch_y-1)*256+Ch_x-1
+	LD LX,C,HX,Ch_y
+	LD IY,C2poutE:JP C2p_acd
+
+C2poutE LD SP,0:RET
+	
+	
+
+
+//////////////////////////////////////////////////инсталл€ци€
+install
+	ld hl,effect,(PLAY),hl
+		call scrset
+		CALL Chn_prp
+		CALL Rot_ins
+	ld a,ub_txt:call BANK
+		call Txt_prp		
+	ret
+	
+scrset
+	ld hl,#5aff,de,#5afe,bc,#1b00
+	ld (hl),c:lddr
+	ld hl,#4000,(hl),#88,bc,#ff:call Fill_
+	ld hl,#4200,(hl),#20,bc,#ff:call Fill_
+	ld hl,#4400,(hl),#88,bc,#ff:call Fill_
+	ld hl,#4600,(hl),#02,bc,#ff:call Fill_
+	ld hl,#4000,de,#4800,bc,#1000:call NLDIR
+scrset1
+	ld a,#17:call BANK
+	ld hl,#4000,de,#c000,bc,#1b00:jp NLDIR
+	ret
+	
+	
+Txt_prp ;подготовка текстуры
+	LD HL,Chtxt_t,DE,Rot_tb
+	LD LX,#20
+Txtprp1 PUSH DE:LD B,Txt_xsz
+Txtprp2 LD A,(HL)
+	//add #20
+	//RLA:RLA:AND #3C:OR Ch_scr[
+	LD (DE),A:INC HL,DE:DJNZ Txtprp2
+;
+	LD BC,HL:POP HL:PUSH BC
+	LD BC,#0100-Txt_xsz
+	LDIR:POP HL
+	DEC LX:JR NZ,Txtprp1
+;
+	LD HL,Rot_tb,BC,#2000:LDIR
+	RET
+
+ 
+	
+//////////////////////////////////////////////////инсталл€ци€
+	
+Chn_prp ;подготовка c2p-рутины
+;атрибуты
+	LD HL,C2p_d1,DE,C2p_acd,(C2p_d3m+1),DE
+	LD B,Ch_x/2,C,C2p_d2-C2p_d1:CALL Crunch
+	DEC DE:LD A,#05,(C2p_d3),A
+	LD HL,C2p_d3,C,C2p_d4-C2p_d3:LDIR
+;пикселы
+	LD HL,C2p_d2,DE,C2p_pcd,(C2p_d3m+1),DE
+	LD B,Ch_x/2,C,C2p_d3-C2p_d2:CALL Crunch
+	DEC DE:LD A,#04,(C2p_d3),A
+	LD HL,C2p_d3,C,C2p_d4-C2p_d3:LDIR
+;часть кода (push hl)
+	LD HL,C2p_d4,DE,Out_cd:PUSH DE
+	LD B,Ch_x/2*8
+	LD C,C2p_d5-C2p_d4:CALL Crunch
+	LD HL,C2p_d5,C,C2p_de-C2p_d5:LDIR
+	POP HL:LD BC,((8*Ch_x/2)*3+8)*2-8:LDIR
+	EX DE,HL:JP Exit_iy
+
+
+C2p_d1  ;генерилка атрибутов
+	LD A,(BC),L,A,D,(HL):DEC C
+	LD A,(BC),L,A,E,(HL):PUSH DE:DEC C
+; 55_tct on pair
+C2p_d2  ;генерилка кода
+	LD A,(BC),L,A,E,(HL):INC C
+	LD A,(BC),L,A,D,(HL):RES 3,D:PUSH DE
+	DEC SP:INC C
+; 69_tct on pair
+C2p_d3  ;конец цикла
+; буфер по секторам
+	INC B:LD C,LX:DEC HX; inc/dec
+C2p_d3m JP NZ,#0000:JP (IY)
+C2p_d4  NOP:NOP:PUSH HL
+C2p_d5  LD IX,-7*256:ADD IX,SP:LD SP,IX
+C2p_de
+
+;буфер непрерывный
+;_DEC BC:DEC HX
+;C2p_d3m JP NZ,#0000:JP (IY)
+
+Exit_iy ;служебна€ рутина
+	LD (HL),#FD:INC HL:LD (HL),#E9:INC HL
+	RET
+;
+De_2_hl ;служебна€ рутина
+	LD (HL),E:INC HL:LD (HL),D:INC HL
+	RET
+
+
+	
+Rot_ins ;инсталл€ци€ вращалки
+	LD DE,Rot_plc,HL,Rot_dt
+	LD B,Ch_xsiz,C,Rot_dte-Rot_dt
+	CALL Crunch
+		ex hl,de
+	LD (HL),#C9:DEC HL:LD (HL),#03
+;
+	LD LX,#50
+Rotins1 CALL Rot_clc
+	DEC LX:JR NZ,Rotins1
+	RET
+;
+Rot_dt
+	LD A,H:ADD HL,DE:EXX:OR high Rot_tb
+	LD B,A,C,H:ADD HL,DE:LD A,(BC)
+	EXX:LD (BC),A:INC C
+Rot_dte ;67_tacts!!!
+
+
+	
+/////////////////////////////////////////////////load blocks		
+	ALIGN #100
+Palette INCBIN "pal32.pal";[#0200]
+Atr_tb  EQU Palette
+Pix_tb  EQU Palette+#0100
+
+Txt_xsz EQU #20
+; размер текстуры по X
+; по Y всегда #20!!!
+Chtxt_t incbin "TEX5.raw"
+E_eff 
+	
+e_eff
+
+/////////////////////////////////////////////////load blocks
+	org #c000
+Rot_tb  
+texture	//текстура ротатора
+
+
+
+	//savebin "eff10.cod",Demo,e_eff-Demo
+        
+/////////////////////////////////////////////////loaded banks
+	
+	INCLUDE ..\_files\ub_load.zx
+
+/////////////////////////////////////////////////save snapshot 
+	SAVESNA "demo.sna",kernal_start
+	
+	LABELSLIST "labels.txt"

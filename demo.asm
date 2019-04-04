@@ -2,40 +2,41 @@
 
 screen_address	equ #c000
 
-pic_buffer	equ #6000
 
-dot_tab		equ #7800		; [#0400]
+pic_draw_code	equ #6000		; [#1661]
+tmp_buffer	equ #8000		; [#0e40] - 19*24*8
+start		equ #9b00
+scr_buffer	equ #b100		; [#0180]
+dot_tab		equ #b400		; [#0400]
 stars_layer_1	equ dot_tab+#400	; [#0200]
-stars_layer_2	equ stars_layer_1+#400	; [#0200]
-stars_layer_3	equ stars_layer_2+#400	; [#0200]
-
-start		equ #8600
-
-im_tab		equ #be00		;[#0200]
+stars_layer_2	equ stars_layer_1+#200	; [#0200]
+stars_layer_3	equ stars_layer_2+#200	; [#0200]
+im_tab		equ #be00		; [#0200]
 
 color		equ #47
 stars_count	equ 100
 
+; glow - #c8ce (#d9ce)
+; earth - #d031
+
 	org start
 
+	ei
 	ld sp,#bfff
 	call init
 
 	call stars_init
 	ei
 loop
-	halt
-	call scr_swap
-	ld a,2:out (#fe),a
-	call cls_pix
-	; call pic_draw
 
-	ld a,3:out (#fe),a
+	call scr_swap
+	call scr_fill
+	halt
+	call pic_draw
+
 	ld hl,stars_layer_1, bc,#0101: call stars_render
-	; ld a,4:out (#fe),a
-	; ld hl,stars_layer_2, bc,#0202: call stars_render
-	; ld a,5:out (#fe),a
-	; ld hl,stars_layer_3, bc,#0303: call stars_render
+	ld hl,stars_layer_2, bc,#0202: call stars_render
+	ld hl,stars_layer_3, bc,#0303: call stars_render
 
 
 	ld a,#7f: in a,(#fe): bit 0,a: call z,direction_change
@@ -48,24 +49,50 @@ loop
 
 	halt
 
+	halt
 	jr $
 
 ; ----- picture draw
 pic_draw
-	ld (pic_draw_sp+1),sp, sp,pic_buffer, ix,pic_draw_sp
+	ld (pic_draw_sp+1),sp, sp,scr_buffer, ix,pic_draw_sp, c,0
 	jp pic_draw_code
 pic_draw_sp	ld sp,0
 	ret
 
 pic_draw_init
-	ld hl,pic_draw_code, de,screen_address
-1b	ld (hl),#e1: inc hl
-	ld (hl),#22: inc hl
-	ld (hl),e: inc hl: ld (hl),d: inc hl
-	inc de,de
-	ld a,d: cp high screen_address+#18: jp c,1b
-	ld (hl),#dd: inc hl: ld (hl),#e9
+	ld iy,scr_buffer
+	ld ix,pic_draw_code, de,screen_address+6, hl,tmp_buffer, c,192
+1	ld b,19: push de
+2	ld a,(hl): inc hl	; get sprite piece
+
+	cp #ff: jp nz,begin	; check if no spr
+	inc de: jp skip
+
+begin:	exa
+	ld a,0: and a: jp nz,3f
+	inc a: ld (begin+2),a
+	ld (ix),#e1: inc ix	; pop hl (get screen address for line)
+	ld (iy),e: inc iy	; save address
+	ld (iy),d: inc iy
+3	exa: and a: jr nz,4f	; check if empty spr
+	ld (ix),#71: inc ix	; ld (hl),c - c = 0
+	jp next
+
+4	ld (ix),#3e: inc ix	; ld a,XX
+	ld (ix),a: inc ix
+	ld (ix),#a6: inc ix	; and (hl)
+	ld (ix),#77: inc ix	; ld (hl),a
+
+next: 	ld (ix),#2c: inc ix	; inc l
+skip:	djnz 2b
+	sub a: ld (begin+2),a
+	pop de: call down_d
+	dec c: jp nz,1b
+	ld (ix),#dd: inc ix: ld (ix),#e9
 	ret
+
+pic_draw_innerloop
+	ld a,(de): and (hl): ld (de),a: inc de,hl
 
 ; -----	stars fx
 direction_change
@@ -128,9 +155,8 @@ init
 	ld hl,#4000, de,#c000, bc,#1b00: ldir
 
 	ld a,#10: call set_bnk
-	ld hl,mask
-	ld de,pic_buffer
-	call depack
+	ld hl,mask, de,tmp_buffer, bc,mask_end-mask: ldir
+; 	call depack
 
 	call pic_draw_init
 	call dot_init
@@ -147,17 +173,23 @@ init
 	include "modules/dot.asm"
 
 ; -----	assets
-depack	include	"lib/dzx7.asm"
+; depack	include	"lib/dzx7.asm"
+glow_atr	inctrd "empty.trd", "glowatr.C"
+mask_end
+	display "code end: ", $
 
-pic_draw_code	equ $
-
-
-	display "end: ", $
+	org tmp_buffer
+mask		inctrd "empty.trd", "maskspr.C"
+	display "tmp buffer end: ", $
 
 	page 0
 	org #c000
-mask	incbin	"gfx/mask.zx7"
+glow		inctrd "empty.trd", "glowspr.C"
+earth		inctrd "empty.trd", "maskspr.C"
 
+	display "#10 end: ",$
+
+; ----- save
 	savesna "demo.sna",start
 	savesna "../_tools/unreal/qsave1.sna", start
 	labelslist "../_tools/unreal/user.l"
