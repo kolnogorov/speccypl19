@@ -5,16 +5,16 @@ screen_address	equ #c000
 
 Ch_scr  	EQU #6000		; [#1800]// чанковый буфер
 Out_cd  	EQU #7900		; [#0500]// код построения пикселов
-;		#7e00-#8000		; [#0300]
+scr_buffer	equ #7e00		; [#0300]
 tmp_buffer	equ #8000		; [#0e40] - 19*24*8
 
 pic_draw_code	equ #8c00		; [#1700]
-start		equ #a500
+start		equ #a400
 
-edges_tab	equ #b400
-C2p_acd 	EQU #b480		; [#00A0]// код построения атрибутов
-C2p_pcd 	EQU #b520		; [#00C0]// код генерации построения пикселов
-scr_buffer	equ #b600		; [#0300]
+edges_tab	equ #b600
+C2p_acd 	EQU #b780		; [#00A0]// код построения атрибутов
+C2p_pcd 	EQU #b820		; [#00C0]// код генерации построения пикселов
+; scr_buffer	equ #b600		; [#0300]
 dot_tab		equ #b900		; [#0400]
 stars_layer_1	equ #bd00		; [#00a0]
 stars_layer_2	equ #bda0		; [#0048]
@@ -24,7 +24,7 @@ glow_scr_adr	equ #c8ce
 glow_atr_adr	equ #d9ce
 earth_scr_adr	equ #d031
 
-color		equ #47
+color			equ #47
 stars_layer_1_count	equ 80
 stars_layer_2_count	equ 20
 
@@ -33,7 +33,7 @@ stars_layer_2_count	equ 20
 
 	org start
 
-	ld sp,#5fff
+	ld sp,#5f00
 	call init
 
 	call stars_init
@@ -44,7 +44,10 @@ loop
 	call scr_update
 
 	; call scr_fill
-	halt
+	; halt
+
+	; call flame
+	call plasma
 	call c2p_draw
 	halt
 	call pic_draw
@@ -54,7 +57,7 @@ loop
 	ld hl,stars_layer_2, bc,#0202, a,stars_layer_2_count: call stars_render
 	; ld hl,stars_layer_3, bc,#0303: call stars_render
 
-	; halt
+	halt
 	call earth_draw
 
 	ld a,#7f: in a,(#fe): bit 0,a: call z,direction_change
@@ -95,6 +98,8 @@ init
 	include "modules/glow.asm"
 	include "modules/earth.asm"
 	include "modules/c2p.asm"
+	include "modules/plasma.asm"
+	; include "modules/flame.asm"
 
 ; -----	assets
 depack		include	"lib/dzx7.asm"
@@ -127,8 +132,10 @@ glow		inctrd "empty.trd", "glowspr.C"
 
 		page 1
 		org #c000
-mask_spr	inctrd "empty.trd", "mask_spr.C"
-mask_atr	inctrd "empty.trd", "mask_atr.C"
+mask_left	inctrd "empty.trd", "left.C"
+mask_right	inctrd "empty.trd", "right.C"
+; mask_spr	inctrd "empty.trd", "mask_spr.C"
+; mask_atr	inctrd "empty.trd", "mask_atr.C"
 
 		display "#11 end: ", $
 

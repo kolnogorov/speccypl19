@@ -45,7 +45,7 @@ C2poutE LD SP,0:RET
 
 c2p_init
 	call Chn_prp
-	call Txt_prp
+	; call Txt_prp
 	ret
 
 Chn_prp ;подготовка c2p-рутины
@@ -98,35 +98,52 @@ De_2_hl ;служебная рутина
 	RET
 
 Txt_prp ;подготовка текстуры
-	LD HL,0,DE,Ch_scr
+	LD l,#ff,DE,Ch_scr
 	LD LX,#20-8
 Txtprp1 PUSH DE:LD B,Txt_xsz
-Txtprp2 LD a,l
+Txtprp2 LD a,l:and #1f
 	LD (DE),A:INC DE:DJNZ Txtprp2
 ;
 	LD BC,HL:POP HL:PUSH BC
 	LD BC,#0100-Txt_xsz
 	LDIR:POP HL
-	inc l:and #1f
+	dec l
 	DEC LX:JR NZ,Txtprp1
 ;
 	RET
 
 scr_update
-	ld hl,#c000,(hl),#88,bc,#ff:call fill_l
-	ld hl,#c200,(hl),#20,bc,#ff:call fill_l
-	ld hl,#c400,(hl),#88,bc,#ff:call fill_l
-	ld hl,#c600,(hl),#02,bc,#ff:call fill_l
-	ld hl,#c000,de,#c800,bc,#1000:call fast_ldir
+	ld hl,#c100, a,#88:call fill_sp
+	ld hl,#c300, a,#20:call fill_sp
+	ld hl,#c500, a,#88:call fill_sp
+	ld hl,#c700, a,#02:call fill_sp
+
+	ld hl,#c900, a,#88:call fill_sp
+	ld hl,#cb00, a,#20:call fill_sp
+	ld hl,#cd00, a,#88:call fill_sp
+	ld hl,#cf00, a,#02:call fill_sp
+
+	ld hl,#d100, a,#88:call fill_sp
+	ld hl,#d300, a,#20:call fill_sp
+	ld hl,#d500, a,#88:call fill_sp
+	ld hl,#d700, a,#02:call fill_sp
+
 	ret
+
+fill_sp
+	ld (fill_sp_exit+1),sp, sp,hl
+	ld h,a,l,a
+	.128 push hl
+fill_sp_exit
+	ld sp,0: ret
 
 scrset
 	ld hl,#5aff,de,#5afe,bc,#1b00
 	ld (hl),c:lddr
-	ld hl,#4000,(hl),#88,bc,#ff:call fill_l
-	ld hl,#4200,(hl),#20,bc,#ff:call fill_l
-	ld hl,#4400,(hl),#88,bc,#ff:call fill_l
-	ld hl,#4600,(hl),#02,bc,#ff:call fill_l
+	ld hl,#4000,(hl),#88,bc,#ff:call fill_
+	ld hl,#4200,(hl),#20,bc,#ff:call fill_
+	ld hl,#4400,(hl),#88,bc,#ff:call fill_
+	ld hl,#4600,(hl),#02,bc,#ff:call fill_
 	ld hl,#4000,de,#4800,bc,#1000:call fast_ldir
 scrset1
 	ld a,#17:call set_bnk

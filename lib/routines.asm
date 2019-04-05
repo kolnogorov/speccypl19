@@ -22,16 +22,16 @@ rnd_x	push af: call rnd8
 	cp l: jr c,rnd_x
 	ld a,l: ret
 
-scr_fill
-	ld hl,#ffff: jr $+2+3
-; clear pixel screen
-cls_pix
-	ld hl,0, a, 6144/2/192
-	ld (cls_pix_sp+1),sp, sp,screen_address+#1800
-1	.192 push hl
-	dec a: jp nz,1b
-cls_pix_sp
-	ld sp,0: ret
+; scr_fill
+; 	ld hl,#ffff: jr $+2+3
+; ; clear pixel screen
+; cls_pix
+; 	ld hl,0, a, 6144/2/192
+; 	ld (cls_pix_sp+1),sp, sp,screen_address+#1800
+; 1	.192 push hl
+; 	dec a: jp nz,1b
+; cls_pix_sp
+; 	ld sp,0: ret
 
 ; im2 table create
 im2_init
