@@ -5,16 +5,15 @@ screen_address	equ #c000
 
 Ch_scr  	EQU #6000		; [#1800]// чанковый буфер
 Out_cd  	EQU #7900		; [#0500]// код построения пикселов
-scr_buffer	equ #7e00		; [#0300]
+C2p_acd 	EQU #7da0		; [#00A0]// код построения атрибутов
+C2p_pcd 	EQU #7e40		; [#00C0]// код генерации построения пикселов
+edges_tab	equ #7f00
 tmp_buffer	equ #8000		; [#0e40] - 19*24*8
 
 pic_draw_code	equ #8c00		; [#1700]
 start		equ #a400
 
-edges_tab	equ #b600
-C2p_acd 	EQU #b780		; [#00A0]// код построения атрибутов
-C2p_pcd 	EQU #b820		; [#00C0]// код генерации построения пикселов
-; scr_buffer	equ #b600		; [#0300]
+scr_buffer	equ #b600		; [#0300]
 dot_tab		equ #b900		; [#0400]
 stars_layer_1	equ #bd00		; [#00a0]
 stars_layer_2	equ #bda0		; [#0048]
@@ -57,7 +56,7 @@ loop
 	ld hl,stars_layer_2, bc,#0202, a,stars_layer_2_count: call stars_render
 	; ld hl,stars_layer_3, bc,#0303: call stars_render
 
-	halt
+	; halt
 	call earth_draw
 
 	ld a,#7f: in a,(#fe): bit 0,a: call z,direction_change
