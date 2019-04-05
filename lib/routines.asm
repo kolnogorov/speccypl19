@@ -1,5 +1,6 @@
 down_d	inc d: ld a,d: and 7: ret nz: ld a,e: add a,#20: ld e,a: ret c: ld a,d: add a,-8: ld d,a: ret
 down_h	inc h: ld a,h: and 7: ret nz: ld a,l: add a,#20: ld l,a: ret c: ld a,h: add a,-8: ld h,a: ret
+down_d8	.8 call down_d:ret
 
 seed	dw 0
 rnd2	call rnd8:and 1:ret
@@ -76,5 +77,5 @@ set_bank	push bc:ld bc,#7ffd:out(c),a:pop bc:ret
 ; in:	hl-откуда, de-куда
 ;    	b-сколько раз, c-длина кода
 crunch
-	push bc,hl: ld b,0: ldir
-	pop hl,bc: djnz crunch: ex de,hl: ret
+Crunch	push bc,hl: ld b,0: ldir
+	pop hl,bc: djnz crunch: ret

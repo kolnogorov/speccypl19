@@ -1,0 +1,84 @@
+//��������� ������� ��� �������� ��������� ������
+//psndcj - 04.09.07 (original - 2000year)
+
+	DEVICE ZXSPECTRUM128
+
+main    EQU #6000
+
+Pal     EQU #4000// ������������ ������� �� ������ (pix)
+Pal_atr EQU #5800+low Pal// ������������ ������� �� ������ (atr)
+Len     EQU 32// ����� (����� ������)
+
+
+Palette EQU #8000//[#0200] ���������� �������
+
+Tmp     EQU #C000//[#1b00] ����� ��� �������� ������
+
+;------------------
+
+
+        ORG main
+	DI
+	ld a,22,(cns_pos_y),a
+
+	LD HL,Tmp,DE,#4000,BC,#1B00:LDIR
+
+	LD DE,Palette
+	LD IX,Pal+#0100; ���������� � ������+1
+	LD IY,Pal_atr
+	LD A,Len
+M1      EXA
+	LD A,(IY),(DE),A:INC D
+	LD HL,Pix_tb,BC,0,A,(IX)
+M2      CP (HL):JR Z,M3:INC L,C:JR NZ,M2
+; ������!!!
+	LD A,7:OUT (#FE),a
+
+	ld a,#40+2*8+6,(cns_atr),a// ������� ����
+	ld a,#40+2*8+6,(cns_atr_sym),a// ������� ����
+	call console_message:db "error!!! ",13,"texture pattern not correct!!!",0
+		jr $
+
+M3      LD HL,Cod_tb:ADD HL,BC
+	LD A,(HL),(DE),A:DEC D
+	INC E,IX,IY
+	EXA:DEC A:JR NZ,M1
+
+	// ����� ���������� ���������
+	dec ix:push ix
+	call console_message:db "start: ",0
+	ld hl,Palette:call console_number
+	call console_message:db 13,"  end: ",0
+	ld hl,Palette+#200-1:call console_number
+
+	jr $
+
+//////////////////////////////////////
+
+	include "console.zx"
+
+        align #100
+Pix_tb  //������� ������� (���������)
+	DB #00,#44,#55,#75,#77
+
+		align #100
+Cod_tb  //������� �����
+	DB #6F,#68,#69,#6A,#6B
+
+
+;-------------
+E_all
+
+
+	ORG Palette
+	DEFS #0100,#00
+	DEFS #0100,#6F
+
+	ORG Tmp// ��������� �������� � �������� - �������������� �� ��������� ������
+	INCBIN "pal.scr"
+
+
+/////////////////////////////////////////////////save snapshot
+	SAVESNA "palette_converter.sna",main
+
+

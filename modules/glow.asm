@@ -2,9 +2,8 @@ glow_size	equ 11*10*8
 
 glow_draw
 	call rnd8: and 7
-glow_last	cp 0
-	jr z,glow_draw
-	ld (glow_last+1),a
+glow_last_1	cp 0: jr z,glow_draw: push af: ld a,(glow_last_2+1),(glow_last_1+1),a: pop af
+glow_last_2	cp 1: jr z,glow_draw: ld (glow_last_2+1),a
 	add a,a: ld e,a,d,0
 	ld hl,glow_tab: add hl,de
 	ld a,(hl): inc hl: ld h,(hl), l,a

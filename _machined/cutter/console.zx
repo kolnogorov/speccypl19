@@ -1,0 +1,101 @@
+// простая консоль - вывод сообщений
+// psndcj - 03oct06
+
+console_ini 	jp cns_ini	// установка начальных значений
+console_message jp cns_msg	// вывод текстового сообщения
+console_number	jp cns_nmb	// вывод числа
+
+cns_pos_x		db 0 //положение в строке
+cns_pos_y		db 0 //номер строки (сверху)
+cns_nmb_type	db 0 //0 - hex, 1 - dec
+cns_atr			db #48+7 //атрибуты консоли
+cns_atr_sym 	db #48+7 //атрибуты выводимого текста
+
+cns_ini	// установка начальных значений
+	ret
+
+	
+	
+cns_msg // вывод текстового сообщения
+	pop hl
+cns_msg1
+	ld ix,cns_pos_x
+	ld a,(hl):inc hl:and a:jr nz,cns_msg2
+	jp (hl) // выход
+cns_msg2 
+	cp 13:jr z,cns_msg_newline
+// печать символа A
+	push hl
+	exa
+	ld a,(ix):and a:call z,cns_msg_clsline
+	exa
+	ld l,a,h,0
+ .3 add hl,hl
+ 	ld a,#3c:add a,h:ld h,a
+ 	push hl
+ 	call cns_msg_adr
+ 	ld a,(ix+4),(de),a
+ 	ex de,hl:pop hl
+ 	ld b,8
+cns_msg3 ld a,(hl):srl a:or (hl):ld (de),a:inc hl,d:djnz cns_msg3
+	pop hl	
+	inc (ix):ld a,(ix):cp 32:jp nc,cns_msg_newline
+	jr cns_msg1
+//
+cns_msg_clsline // очистка строки
+	push hl
+	call cns_msg_adr
+ 	ld b,32
+cns_msg_clsline1	
+	xor a
+ 	dup 7
+ 		ld (hl),a:inc h
+ 	edup
+ 	ld (hl),a
+ 	ld a,h:and #f8:ld h,a
+ 	ld a,(ix+3),(de),a
+ 	inc l,e:djnz cns_msg_clsline1
+ 	pop hl
+ 	ret
+cns_msg_adr // получаем экранный адрес
+	ld l,(ix+1),h,0
+ .5 add hl,hl
+ 	ld a,(ix):add a,l:ld l,a
+ 	ex de,hl:ld hl,#5800:add hl,de:ex de,hl // de - адрес в атрибутах
+ 	ld a,h:rlca:rlca:rlca:and #18:or #40:ld h,a // hl - адрес в пикселах
+	ret
+//
+// обработчики спец-символов
+//
+cns_msg_newline //новая строка
+	ld (ix),0:inc (ix+1)
+	jp cns_msg1
+	
+		
+cns_nmb // вывод числа
+	ld a,(cns_nmb_type):and a:jr z,cns_nmb_hex
+	ret
+
+	
+cns_nmb_hex	// выводим hex-значение
+	ld de,cns_nmb_buf
+	ld a,#23,(de),a:inc de //#
+	call cns_nmb_hex1
+	ld h,l:call cns_nmb_hex1
+	ld hl,cns_nmb_buf:jp cns_msg1
+cns_nmb_hex1 // процедура - печатает H в DE
+	ld a,h
+ .4	rrca
+ 	call cns_nmb_hex2
+ 	ld a,h
+cns_nmb_hex2 // процедура - печатает A (%xxxxXXXX) в DE
+	and #0f:add a,#30
+	cp #3a:jr c,cns_nmb_hex3
+		add a,7
+cns_nmb_hex3
+	ld (de),a:inc de
+	ret
+
+// общий буфер для печати числа
+cns_nmb_buf ds 5:db 0
+	ret	// код выхода из печати
