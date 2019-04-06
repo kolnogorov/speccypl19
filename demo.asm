@@ -13,7 +13,8 @@ tmp_buffer	equ #8000		; [#0e40] - 19*24*8
 pic_draw_code	equ #8c00		; [#1700]
 start		equ #a400
 
-scr_buffer	equ #b600		; [#0300]
+scr_buffer	equ #b500		; [#0300]
+atr_tab		equ #b800		; [#0100]
 dot_tab		equ #b900		; [#0400]
 stars_layer_1	equ #bd00		; [#00a0]
 stars_layer_2	equ #bda0		; [#0048]

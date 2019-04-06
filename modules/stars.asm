@@ -37,7 +37,7 @@ stars_render
 stars_speed		ds 4		; nop/add a,a
 stars_direction		nop:neg		; nop/neg
 start_render_count	ld b,0, (stars_render_speed+1),a
-stars_render_loop
+stars_render_loop	push bc
 	ld e,(hl): inc hl: ld a,(hl)
 stars_render_speed add a,0: ld d,a, (hl),a: inc hl
 	push hl
@@ -47,7 +47,7 @@ stars_render_type	ld a,0
 	cp 1: jp z,dot_1x1
 	cp 2: jp z,dot_2x2
 	; cp 3: call z, dot_3x3
-stars_render_exit	pop hl
+stars_render_exit	pop hl,bc
 	djnz stars_render_loop
 	ret
 

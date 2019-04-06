@@ -4,8 +4,8 @@ dot_init
 1	ld (hl),d: dec h: ld (hl),e: inc h: call down_d
 	ld a,d: sub 88: jr nz,$+3: ld d,a: inc l: jr nz,1b: inc h: ld a,#80
 2	ld (hl),e: inc h: ld (hl),a: dec h: rrca: jr nc,$+3: inc e,l: jr nz,2b
-	ret
 
+	ret
 
 ; dot_3x3
 ; 	.4 push hl
@@ -24,7 +24,10 @@ dot_init
 ; HL = x,y
 dot_put	; ld (dot_put_method),a
 	ld e,h, h,high dot_tab, d,(high dot_tab)+2
-	ld a,(de): inc d: or (hl): inc h: ld h,(hl), l,a, a,(de)
+	ld a,(de): inc d: or (hl): inc h: ld h,(hl), l,a
+	ld a,h: and #18: or #c0: .3 rrca: or #d8
+	ld b,a, c,l, a,(bc): cp #47: ret nz
+	ld a,(de)
 dot_put_method
 	or (hl)
 	ld (hl),a
