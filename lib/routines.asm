@@ -65,13 +65,14 @@ count	equ #5b00
 
 ; bank and screen change
 
-set_bnk_save	ld (bank_save+1),a, a,(bank+1): and 8
-bank_save	add a,0: jp set_bank
+saved_bank	db 0
+set_bnk_save	ld (bank_save+1),a, a,(bank+1),(saved_bank),a: and 8
+bank_save	add a,0: jp set_bnk
 scr_swap	ld a,#1d:xor 10:ld (scr_swap+1),a
 set_bnk		ld (bank+1),a
-set_bnk_restore
 bank		ld a,0
 set_bank	push bc:ld bc,#7ffd:out(c),a:pop bc:ret
+set_bnk_restore	ld a,(saved_bank):jp set_bnk
 
 ; crunch
 ; in:	hl-откуда, de-куда
