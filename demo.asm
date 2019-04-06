@@ -35,12 +35,14 @@ stars_layer_2_count	equ 20
 
 	ld sp,#5f00
 	call init
+	call intro
 
-	call stars_init
-	ei
 	; di
 loop
+	call fx
+	jr loop
 
+fx
 	call scr_swap
 	call scr_update
 
@@ -61,12 +63,12 @@ loop
 	; halt
 	call earth_draw
 
-	ld a,#7f: in a,(#fe): bit 0,a: call z,direction_change
-	ld a,#f7: in a,(#fe): bit 0,a: call z,speed_set_1
-	ld a,#f7: in a,(#fe): bit 1,a: call z,speed_set_2
-	ld a,#f7: in a,(#fe): bit 2,a: call z,speed_set_3
+	; ld a,#7f: in a,(#fe): bit 0,a: call z,direction_change
+	; ld a,#f7: in a,(#fe): bit 0,a: call z,speed_set_1
+	; ld a,#f7: in a,(#fe): bit 1,a: call z,speed_set_2
+	; ld a,#f7: in a,(#fe): bit 2,a: call z,speed_set_3
 
-	jp loop
+	ret
 
 
 
@@ -76,7 +78,7 @@ init
 	sub a: out (#fe),a
 
 	ld hl,#4000, bc,#1800, de,hl: inc de: ld (hl),l: ldir
-	ld bc,#2ff, (hl),color: ldir
+	ld bc,#2ff, (hl),#00: ldir
 	ld a,#17: call set_bnk
 	ld hl,#4000, de,#c000, bc,#1b00: ldir
 
@@ -87,6 +89,7 @@ init
 	call earth_init
 	call pic_draw_init
 	call c2p_init
+	call stars_init
 
 	call im2_init
 	ret
@@ -100,7 +103,8 @@ init
 	include "modules/earth.asm"
 	include "modules/c2p.asm"
 	include "modules/plasma.asm"
-	; include "modules/flame.asm"
+	include "modules/intro.asm"
+
 
 ; -----	assets
 depack		include	"lib/dzx7.asm"
@@ -135,8 +139,10 @@ glow		inctrd "empty.trd", "glowspr.C"
 		org #c000
 mask_left	inctrd "empty.trd", "left.C"
 mask_right	inctrd "empty.trd", "right.C"
-; mask_spr	inctrd "empty.trd", "mask_spr.C"
-; mask_atr	inctrd "empty.trd", "mask_atr.C"
+oxygen_scr	incbin "gfx/oxy_scr.zx7"
+oxygen_atr	incbin "gfx/oxy_atr.zx7"
+
+
         align #100
 TAB
         DB #40,#40,#40,#40,#40,#40,#40,#40

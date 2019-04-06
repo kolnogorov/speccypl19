@@ -60,7 +60,7 @@ play	call #c005
 im2_stack ld sp,0:ei
 im2_ret	jp 0
 
-count	equ #5b00
+count	dw 0
 ; count	dw 0
 
 ; bank and screen change
@@ -80,3 +80,19 @@ set_bnk_restore	ld a,(saved_bank):jp set_bnk
 crunch
 Crunch	push bc,hl: ld b,0: ldir
 	pop hl,bc: djnz crunch: ret
+
+; wait exact frames
+; bc - exact frames
+wait_frames
+	ld hl,(count)
+	add hl,bc
+	ld bc,hl
+	;ret
+
+; wait until frame
+; bc - frame
+wait	halt
+	ld hl,(count)
+	and a: sbc hl,bc
+	jp c,wait
+	ret
