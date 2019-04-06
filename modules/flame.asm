@@ -33,4 +33,6 @@ loop_4          push hl
                 dec ly: jp nz,loop_4
                 ld l,0: inc h
                 dec hy: jp nz, loop_5
+
+                ; ld hl,#7600, de,#76fe, bc,#1e: call fast_ldir
                 ret

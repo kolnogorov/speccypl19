@@ -3,7 +3,7 @@
 screen_address	equ #c000
 
 fade_tab	equ #5b00		; [#0300]
-atr_inv_tb	equ #5e00
+atr_inv		equ #5e00
 
 Ch_scr  	EQU #6000		; [#1800]// чанковый буфер
 Out_cd  	EQU #7900		; [#0500]// код построения пикселов
@@ -48,12 +48,12 @@ fx
 	call scr_swap
 	call scr_update
 
-	; call scr_fill
 	; halt
-	halt
 	; call flame
+	; ld hl,atr_inv: call c2p_draw
+
 	call plasma
-	; call fade
+	call fade
 	ld hl,atr_tb: call c2p_draw
 
 	halt
@@ -138,7 +138,8 @@ Pix_tb  	EQU Palette+#100
 		org edges_tab
 		incbin "tabs/edge_tab.bin"
 
-		org atr_inv_tb
+		org atr_inv
+		; inctrd "empty.trd", "flame_tb.C";[#0100]
 		db #7f,#7e,#7e,#7e,#7e,#7e,#77,#77
 		db #77,#77,#77,#76,#72,#72,#72,#72
 		db #72,#56,#56,#56,#56,#56,#52,#50
@@ -146,8 +147,7 @@ Pix_tb  	EQU Palette+#100
 		db #50,#50,#50,#50,#42,#42,#42,#42
 		db #42,#42,#42,#42,#42,#42,#42,#42
 		db #42,#42,#42,#42,#42,#42,#42,#42
-		db #42,#42,#42,#42,#42,#42,#42,#42
-		db #42,#42,#42,#42,#42,#42,#42,#42
+		db #42,#42,#42,#42,#42,#42,#40,#40
 
 		org fade_tab
 		db 30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31
@@ -263,7 +263,24 @@ palette	inctrd "empty.trd", "costb1.C"
         ; db #1e,#1e,#1e,#1e,#1f,#1f,#1f,#1f
         ; db #1f
 
+fade_fx
+	dup 24
+	dup 32
+	ld b,high fade_tab
+	ld a,d: sub #60: ld l,a,h,0, a,(de), c,a
+	.5 add hl,hl: add hl,bc
+	ldi
+	edup
+	ld e,0: inc d
+	edup
+	ret
+
 		display "#11 end: ", $
+
+		page 3
+		org #c000
+plasma_fx
+
 
 		page 6
 		org #c000

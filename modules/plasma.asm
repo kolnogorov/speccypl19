@@ -1,5 +1,5 @@
-M_X	equ 7
-M_Y	equ 7
+M_X	db 7
+M_Y	db 7
 
 plasma
         ld a,#11: call set_bnk_save
@@ -7,7 +7,9 @@ plasma
         call set_bnk_restore
         ret
 
-MAIN_LP LD      IX,scr_buffer+#2ff, iy,palette
+MAIN_LP
+        ld hl,Ch_scr+#171f: exx
+        ld IX,scr_buffer+#2ff, iy,palette
 
         LD      H,TAB/#100
         LD      DE,(M_3)
@@ -38,19 +40,23 @@ LOOP_H  EXX
 
 plasma_put
         LD      (IX),A
+        ; exx
+        ; ld (hl),a: dec l
+        ; exx
         DEC     IX
 
         INC     C     ;     !
-ADR_MX  LD      A,M_X
+ADR_MX  LD      A,(M_X)
         ADD     A,B
         LD      B,A
 
         EXX
         dec b: jp nz,LOOP_H
-
+        ld l,#1f
+        dec h
         EXX
 
-ADR_MY  LD      A,M_Y
+ADR_MY  LD      A,(M_Y)
         ADD     A,E
         LD      E,A
         INC     D     ;     !
@@ -118,6 +124,15 @@ TO_END  LD      A,(NAPR)
         .32 ldi
         pop de: inc d
         pop bc: djnz 1b
+
+        ; call INC_M
+        ; ld a,(M_X): inc a: and #1f: add a,7: ld (M_X),a
+        ; ld a,(M_Y): inc a: and #1f: add a,7: ld (M_Y),a
+
+        ; ld hl,M_X
+        ; inc (hl)
+        ; inc hl
+        ; dec (hl)
         ret
 
 OBR_Z
@@ -135,13 +150,13 @@ NAPR    DB  1,2,3,4
 ;-----------------------------------
 ; increase scale
 INC_M   LD      HL,ADR_MX+1
-        LD      A,(HL)
-        CP      M_X
+        LD      A,(M_X)
+        CP      (HL)
         JR      NC,INC_Y
         INC     (HL)
 INC_Y   LD      HL,ADR_MY+1
-        LD      A,(HL)
-        CP      M_Y
+        LD      A,(M_Y)
+        CP      (hl)
         RET     NC
         INC     (HL)
         RET
