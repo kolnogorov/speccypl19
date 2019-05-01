@@ -26,7 +26,7 @@ intro
 	ld bc,576: call wait
 	ld hl,oxygene:call off
 	ei
-	call fx
+	call fx_exec
 
 	ld hl,#c000, de,#4000, bc,#1800: call fast_ldir
 	ld bc,704: call wait
@@ -74,3 +74,4 @@ jmj		dw #5863: db 26, 3
 oxygene		dw #58e0: db 31, 4
 spectrumized	dw #5a06: db 19, 3
 stardust	dw #5a68: db 16, 3
+

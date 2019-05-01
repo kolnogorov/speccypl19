@@ -5,7 +5,7 @@ Ch_ysiz	equ 24
 
 c2p_draw
 C2prend ;генерация кода выкидки
-	ld a,h, (c2p_tb+1),a
+	; ld a,h, (c2p_tb+1),a
 	LD (C2prenE+1),SP
 	LD SP,Out_cd+(Ch_y*Ch_x/2)*3+8*2-1
 	LD H,high Pix_tb

@@ -45,7 +45,7 @@ plasma_put
         ; exx
         DEC     IX
 
-        INC     C     ;     !
+        .3 INC     C     ;     !
 ADR_MX  LD      A,(M_X)
         ADD     A,B
         LD      B,A
@@ -59,14 +59,14 @@ ADR_MX  LD      A,(M_X)
 ADR_MY  LD      A,(M_Y)
         ADD     A,E
         LD      E,A
-        INC     D     ;     !
+        .5 INC     D     ;     !
 
         EX      AF,AF'
         DEC     A
         JP      NZ,LOOP_V
 
         LD      HL,(MEM_BP)
-        DEC     HL          ;     !!
+        .5 DEC     HL          ;     !!
         LD      (MEM_BP),HL
 
         LD      A,L
@@ -145,7 +145,7 @@ M_1     DB  0
 M_2     DB  0
 M_3     DB  0
 M_4     DB  0
-NAPR    DB  1,2,3,4
+NAPR    DB  2,4,8,16
 
 ;-----------------------------------
 ; increase scale

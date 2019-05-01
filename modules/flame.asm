@@ -15,10 +15,12 @@ loop_2:         inc     hl
 loop_3:         ld      (de), a
                 inc     de
                 djnz    loop_2
-                ld      hl, Ch_scr+#100
+                sub a
+                ld      hl, Ch_scr
                 ld      hy,24
 loop_5          ld	ly,32
 loop_4          push hl
+                ld (hl),a
                 inc h: ld a,(hl)
                 inc l: add a,(hl)
                 inc l: add a,(hl)

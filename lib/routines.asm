@@ -96,3 +96,23 @@ wait	halt
 	and a: sbc hl,bc
 	jp c,wait
 	ret
+
+; play fx until frame
+; hl - effect
+; bc - frame
+fx	ld (fx1+1),hl, (fx0+1),bc
+fx0	ld bc,0, hl,(count)
+	and a: sbc hl,bc: ret nc
+fx1	call #cdcd
+	jp fx0
+
+; play fx for exact frames
+; hl - effect
+; bc - exact frames
+fx_frames
+	ld (fxf1+1),hl, hl,(count)
+	add hl,bc: ld (fxf0+1),hl
+fxf0	ld bc,0, hl,(count)
+	and a: sbc hl,bc: ret nc
+fxf1	call #cdcd
+	jp fxf0
