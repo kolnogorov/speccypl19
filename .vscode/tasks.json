@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "SjASMPlus",
+			"type": "shell",
+			"command": "/usr/local/bin/sjasmplus",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"args": ["--nologo", "demo.asm"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"isBackground": false,
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			},
+			"problemMatcher": "$errmatcher-sjasmplus"
+		}
+	]
+}
